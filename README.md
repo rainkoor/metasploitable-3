@@ -15,6 +15,34 @@ Metasploitable 3 on Rapid7 loodud tahtlikult haavatav virtuaalmasin, mille ainus
 
 > ⚠️ **Oluline turvahoiatus.** Ära kunagi ava neid masinaid avalikku internetti ega ühenda koolivõrku, kus on pärisandmed. Need on teadlikult turvaukudega ja võivad reaalselt nakatuda minutitega. Kasuta ainult isoleeritud laborivõrgus (host-only või internal network) ja harjuta ainult nende õppemasinate - oma süsteemide - vastu.
 
+## Mida on labori jooksutamiseks vaja
+
+Labori käivitamiseks on vaja keskkonda, kus masinad töötavad, ründemasinat ja piisavalt riistvararessurssi.
+
+**Kooli Proxmoxis (valmis keskkond):**
+
+- **Riistvararessurss** - Proxmoxi hostil peab olema piisavalt CPU-d, RAM-i ja kettaruumi kõigile korraga töötavatele masinatele (vt allpool).
+- **Kali Linux** - ründemasin, mis on juba olemas ja käib samas isoleeritud laborivõrgus kui sihtmasinad.
+- **Sihtmasinad** - Metasploitable 3 Windows ja/või Ubuntu, imporditud Proxmoxi.
+
+**Iseseisvaks jooksutamiseks (nt oma arvutis):**
+
+- **Hüperviisor** - virtuaalmasinate käitamiseks (nt VirtualBox, VMware või Proxmox VE).
+- **Ründemasin** - Kali Linux (või muu pentest-distro).
+- **Piisav ressurss kõigile masinatele** - kõik masinad peavad korraga mahtuma ühe hosti RAM-i ja kettale.
+
+**Soovituslik ressurss masina kohta:**
+
+| Masin | RAM | vCPU | Ketas |
+| --- | --- | --- | --- |
+| Metasploitable 3 Windows Server 2008 R2 | 2-4 GB | 2 | ~40 GB |
+| Metasploitable 3 Ubuntu 14.04 | 1-2 GB | 1-2 | ~20 GB |
+| Kali Linux (ründemasin) | 2-4 GB | 2 | ~20 GB |
+
+Kõik kolm korraga eeldavad hostil umbes 8 GB vaba RAM-i ja 80 GB kettaruumi. Vähema RAM-iga saab masinaid ka ükshaaval käivitada.
+
+> Kõik masinad peavad olema samas isoleeritud võrgusegmendis, et ründemasin sihtmasinaid näeks (vaata täpsemalt peatükki „Eetika, õiguslikud piirid ja turvaline labor").
+
 ## Põhimõisted ja terminid
 
 Lühike sõnastik mõistetest, mida selles juhendis ja Metasploiti töös pidevalt kohtad.
@@ -159,7 +187,7 @@ vulns                      # loetle leitud haavatavusi
 
 ### Tüüpiline töövoog
 
-**NB! Kõigepealt seadista labori masinatele võrk (Kali ja mõlemad Metasploitable masinad peavad saama võrku, muidu pole teil midagi rünnata.)**
+**NB! Kõigepealt seadista labori masinatele võrk (Kali ja mõlemad Metasploitable masinad peavad saama võrku, muidu pole teil midagi rünnata.**
 
 1. **Luure ja skaneerimine** - `db_nmap`/`nmap` abil leia avatud pordid, teenused ja versioonid.
 2. **Haavatavuste sobitamine** - seo versioonid teadaolevate CVE-dega (`search`, `vulns`, soovi korral Nessuse import).
@@ -261,7 +289,7 @@ sessions -i 1       # sisene sessiooni
 sysinfo             # masina info
 getuid              # praegune kasutaja
 getsystem           # proovi tõsta õigusi (Windows)
-hashdump            # paroolihashid (vajab admin-õigusi)
+hashdump            # paroolihäshid (vajab admin-õigusi)
 shell               # ava natiivne käsurida
 ```
 
