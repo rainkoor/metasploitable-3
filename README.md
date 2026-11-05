@@ -1,5 +1,20 @@
 # Metasploitable 3: teenused ja haavatavused
 
+## Sisukord
+
+1. [Mis on Metasploitable 3](#mis-on-metasploitable-3)
+2. [Mida on labori jooksutamiseks vaja](#mida-on-labori-jooksutamiseks-vaja)
+3. [Põhimõisted ja terminid](#põhimõisted-ja-terminid)
+4. [Windows Server 2008 R2 - teenused ja haavatavused](#windows-server-2008-r2---teenused-ja-haavatavused)
+5. [Ubuntu 14.04 - teenused ja haavatavused](#ubuntu-1404---teenused-ja-haavatavused)
+6. [Vaikemandaadid](#vaikemandaadid)
+7. [Lipud (flags) ja CTF-režiim](#lipud-flags-ja-ctf-režiim)
+8. [Metasploit raamistiku juhend](#metasploit-raamistiku-juhend)
+9. [Näidis-ründestsenaariumid](#näidis-ründestsenaariumid)
+10. [Veaotsing (levinud probleemid)](#veaotsing-levinud-probleemid)
+11. [Eetika, õiguslikud piirid ja turvaline labor](#eetika-õiguslikud-piirid-ja-turvaline-labor)
+12. [Lisamaterjalid ja viited](#lisamaterjalid-ja-viited)
+
 ## Mis on Metasploitable 3
 
 Metasploitable 3 on Rapid7 loodud tahtlikult haavatav virtuaalmasin, mille ainus eesmärk on olla turvaline sihtmärk ründetehnikate ja Metasploiti harjutamiseks isoleeritud laboris. See ei ole toode, mida paigaldada tootmisesse - see on õppekeskkond, kuhu on teadlikult sisse ehitatud kümneid teadaolevaid turvaauke.
@@ -111,6 +126,21 @@ Ubuntu masin keskendub Linuxi teenustele ja veebirakendustele. Tüüpiline skann
 
 Märkus: `vagrant` kasutajal on sageli `sudo`-õigused, seega kehtivate SSH-mandaatide leidmine (nt SQL-süstiga lekkinud paroolid) viib tihti otse root-õigusteni `sudo -i` kaudu.
 
+## Vaikemandaadid
+
+Metasploitable 3 kasutab tahtlikult nõrku ja vaikimisi mandaate. Need on sageli kiireim sissepääs - proovi neid enne pikka brute-force'i. Täpne loend sõltub ehitusest; kahtluse korral kasuta vastavat `auxiliary/scanner/.../login` moodulit või vaata projekti wikit.
+
+| Teenus / kontekst | Kasutaja | Parool |
+| --- | --- | --- |
+| OS-i sisselogimine (Windows & Ubuntu) | `vagrant` | `vagrant` |
+| Ubuntu alternatiivne ehitus | `msfadmin` | `msfadmin` |
+| Apache Tomcat Manager (8282) | `sploit` | `sploit` |
+| GlassFish admin (4848) | `admin` | `sploit` |
+| MySQL | `root` | *(tühi parool)* |
+| SNMP community string | — | `public` |
+
+Lisaks on masinas hulk nõrkade paroolidega kasutajakontosid (nt `han_solo`, `boba_fett`, `kylo_ren` jt), mis sobivad SSH ja SMB sisselogimiseks. Neid saab leida `auxiliary/scanner/ssh/ssh_login` või `auxiliary/scanner/smb/smb_login` mooduliga, kasutades sõnaloendit.
+
 ## Lipud (flags) ja CTF-režiim
 
 Mõlemasse masinasse on peidetud „lipud" - Windowsi masinas on need mängukaardi-pildid (pokkerikaardid), mis on laiali failisüsteemis ja teenustes. Eesmärk on leida kõik kaardid, kasutades erinevaid sissemurdmise ja post-exploitationi tehnikaid.
@@ -187,7 +217,7 @@ vulns                      # loetle leitud haavatavusi
 
 ### Tüüpiline töövoog
 
-**NB! Kõigepealt seadista labori masinatele võrk (Kali ja mõlemad Metasploitable masinad peavad saama võrku, muidu pole teil midagi rünnata.**
+**NB! Kõigepealt seadista labori masinatele võrk (Kali ja mõlemad Metasploitable masinad peavad saama võrku, muidu pole teil midagi rünnata).**
 
 1. **Luure ja skaneerimine** - `db_nmap`/`nmap` abil leia avatud pordid, teenused ja versioonid.
 2. **Haavatavuste sobitamine** - seo versioonid teadaolevate CVE-dega (`search`, `vulns`, soovi korral Nessuse import).
@@ -293,7 +323,16 @@ hashdump            # paroolihäshid (vajab admin-õigusi)
 shell               # ava natiivne käsurida
 ```
 
-Soovitus õppes: Tee iga sammu järel ekraanitõmmis kirjelda, mida käsk tegi - nii seostub tööriist konkreetse haavatavusega.
+Soovitus õppes: Tee iga sammu järel ekraanitõmmis ja kirjelda, mida käsk tegi - nii seostub tööriist konkreetse haavatavusega.
+
+## Veaotsing (levinud probleemid)
+
+- **Sihtmasin ei vasta nmapile.** Kontrolli, et ründe- ja sihtmasin on samas võrgus (sama SDN/VLAN) ning et Windowsi masina tulemüür ei blokeeri - Metasploitable 3 Windowsil on Windows Firewall vaikimisi sees. Vajadusel saab selle admin-käsureal välja lülitada: `netsh advfirewall set allprofiles state off`.
+- **Oma IP teadmine.** `LHOST` peab olema sinu ründemasina (Kali) IP, mitte `127.0.0.1`. Kontrolli käsuga `ip a` (või `ifconfig`).
+- **„Exploit completed, but no session was created."** Payload ei pääsenud ründemasinale tagasi (vale `LHOST`, tulemüür) või teenus polnud haavatav. Proovi teist payloadi, kontrolli porti ja tee enne `check`.
+- **Teenus pole aktiivne.** Osa teenuseid (nt RDP) tuleb sihtmasinal käsitsi lubada või registrivõti seadistada - vaata wikist, kas teenus on vaikimisi käivitatud.
+- **Vale tee või port.** Nt `SITEPATH`, `TARGETURI` või `RPORT` on vale - kontrolli teenuse tegelikku seadistust nmap-skannist.
+- **Masin käitub pärast rünnakut imelikult.** Taasta Proxmoxi snapshotist algseis ja alusta puhtalt.
 
 ## Eetika, õiguslikud piirid ja turvaline labor
 
